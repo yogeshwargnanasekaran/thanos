@@ -213,7 +213,7 @@ func (s *TSDBStore) translateAndExtendLabels(m, extend labels.Labels) []storepb.
 func (s *TSDBStore) LabelNames(ctx context.Context, r *storepb.LabelNamesRequest) (
 	*storepb.LabelNamesResponse, error,
 ) {
-	q, err := s.db.Querier(ctx, r.Start, r.End)
+	q, err := s.db.ChunkQuerier(ctx, r.Start, r.End)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
@@ -230,7 +230,7 @@ func (s *TSDBStore) LabelNames(ctx context.Context, r *storepb.LabelNamesRequest
 func (s *TSDBStore) LabelValues(ctx context.Context, r *storepb.LabelValuesRequest) (
 	*storepb.LabelValuesResponse, error,
 ) {
-	q, err := s.db.Querier(ctx, r.Start, r.End)
+	q, err := s.db.ChunkQuerier(ctx, r.Start, r.End)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}

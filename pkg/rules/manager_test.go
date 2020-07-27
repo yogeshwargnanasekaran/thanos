@@ -43,8 +43,14 @@ func (n nopQueryable) Querier(_ context.Context, _, _ int64) (storage.Querier, e
 	return storage.NoopQuerier(), nil
 }
 
+type nopQueryable struct{}
+
+func (n nopQueryable) Querier(_ context.Context, _, _ int64) (storage.Querier, error) {
+	return storage.NoopQuerier(), nil
+}
+
 // Regression test against https://github.com/thanos-io/thanos/issues/1779.
-func TestRun(t *testing.T) {
+func TestRun_Subqueries(t *testing.T) {
 	dir, err := ioutil.TempDir("", "test_rule_run")
 	testutil.Ok(t, err)
 	defer func() { testutil.Ok(t, os.RemoveAll(dir)) }()
@@ -84,17 +90,16 @@ groups:
 		},
 		labels.FromStrings("replica", "1"),
 	)
-	testutil.Ok(t, thanosRuleMgr.Update(10*time.Second, []string{filepath.Join(dir, "rule.yaml")}))
+	testutil.Ok(t, thanosRuleMgr.Update(1*time.Second, []string{filepath.Join(dir, "rule.yaml")}))
 
 	thanosRuleMgr.Run()
 	defer thanosRuleMgr.Stop()
 
 	select {
-	case <-time.After(2 * time.Minute):
+	case <-time.After(1 * time.Minute):
 		t.Fatal("timeout while waiting on rule manager query evaluation")
 	case <-queryDone:
 	}
-
 	testutil.Equals(t, "rate(some_metric[1h:5m] offset 1d)", query)
 }
 
